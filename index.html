@@ -314,7 +314,7 @@
           }
 
           totalDiscount += currentRuleDiscount;
-          discountDetails.push(`${description} (-NT$ ${formatPrice(currentRuleDiscount)})`);
+          discountDetails.push(`${description}`);
         }
       });
 
@@ -444,54 +444,55 @@
 
     // 渲染商品卡片 (含口味選單)
     function renderProducts(groups) {
-        const grid = document.getElementById("product-grid");
-        grid.innerHTML = groups.map(group => {
-          const hasVariants = group.variants.length > 1;
-          const defaultVariant = group.variants[0];
-          const safeKey = group.groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const grid = document.getElementById("product-grid");
+      grid.innerHTML = groups.map((group, idx) => {
+        const hasVariants = group.variants.length > 1;
+        const defaultVariant = group.variants[0];
+        // 使用索引 idx 確保 ID 全網頁唯一
+        const safeKey = 'card_' + idx;
 
-          return `
-            <div class="bg-white rounded-lg border border-stone-100 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between p-4">
-              <div>
-                <div class="w-full h-48 bg-stone-100 rounded-md mb-3 flex items-center justify-center text-stone-300 text-xs overflow-hidden relative">
-                  ${group.imageUrl ? `<img src="${group.imageUrl}" class="w-full h-full object-cover">` : '光顧好店'}
-                  <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
-                    ${group.category.includes("中秋限定") ? `<span class="bg-[#2FB5A4] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🥮中秋限定優惠</span>` : ''}
-                    ${group.discountBadgeText ? `<span class="bg-[#F1816E] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🏷️${group.discountBadgeText}</span>` : ''}
-                  </div>
-                </div>
-                
-                <span class="text-xs text-stone-400 font-light">${group.brandName || '在地嚴選'}</span>
-                <h4 class="font-medium text-stone-800 mb-1">${group.baseName}</h4>
-                <p class="text-xs text-stone-500 mb-3">${group.itemNote || ''}</p>
-                
-                ${hasVariants ? `
-                  <div class="mb-3">
-                    <label class="block text-[11px] text-stone-400 mb-1">選擇口味/規格：</label>
-                    <select id="select-variant-${safeKey}" onchange="updateCardPrice('${group.groupKey}')" class="w-full px-2 py-1.5 border border-stone-200 rounded text-xs bg-stone-50 text-stone-700 focus:outline-none focus:border-stone-500">
-                      ${group.variants.map((v, vIdx) => `<option value="${vIdx}">${v.flavor}</option>`).join('')}
-                    </select>
-                  </div>
-                ` : ''}
-
-                <div class="mb-2 flex items-center justify-between text-xs text-stone-500">
-                  <span>選擇數量：</span>
-                  <div class="flex items-center border border-stone-200 rounded overflow-hidden">
-                    <button type="button" onclick="adjustCardQty('${safeKey}', -1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">-</button>
-                    <input type="number" id="input-qty-${safeKey}" value="1" min="1" class="w-10 h-7 text-center text-xs font-medium focus:outline-none bg-white border-x border-stone-100" onchange="validateCardQty('${safeKey}')">
-                    <button type="button" onclick="adjustCardQty('${safeKey}', 1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">+</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center mt-2 pt-2 border-t border-stone-50">
-                <span id="price-display-${safeKey}" class="font-bold text-stone-800">NT$ ${formatPrice(defaultVariant.price)}</span>
-                <button type="button" onclick="addSelectedVariantToCart('${group.groupKey}')" class="btn-primary text-xs px-3 py-1.5 rounded transition">加入購物車</button>
+        return `
+        <div class="bg-white rounded-lg border border-stone-100 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between p-4">
+          <div>
+            <div class="w-full h-48 bg-stone-100 rounded-md mb-3 flex items-center justify-center text-stone-300 text-xs overflow-hidden relative">
+              ${group.imageUrl ? `<img src="${group.imageUrl}" class="w-full h-full object-cover">` : '光顧好店'}
+              <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
+                ${group.category.includes("中秋限定") ? `<span class="bg-[#2FB5A4] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🥮中秋限定優惠</span>` : ''}
+                ${group.discountBadgeText ? `<span class="bg-[#F1816E] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🏷️${group.discountBadgeText}</span>` : ''}
               </div>
             </div>
-          `;
-        }).join('');
-      }
+            
+            <span class="text-xs text-stone-400 font-light">${group.brandName || '在地嚴選'}</span>
+            <h4 class="font-medium text-stone-800 mb-1">${group.baseName}</h4>
+            <p class="text-xs text-stone-500 mb-3">${group.itemNote || ''}</p>
+            
+            ${hasVariants ? `
+            <div class="mb-3">
+              <label class="block text-[11px] text-stone-400 mb-1">選擇口味/規格：</label>
+              <select id="select-variant-${safeKey}" onchange="updateCardPrice('${safeKey}', ${idx})" class="w-full px-2 py-1.5 border border-stone-200 rounded text-xs bg-stone-50 text-stone-700 focus:outline-none focus:border-stone-500">
+                ${group.variants.map((v, vIdx) => `<option value="${vIdx}">${v.flavor}</option>`).join('')}
+              </select>
+            </div>
+            ` : ''}
+
+            <div class="mb-2 flex items-center justify-between text-xs text-stone-500">
+              <span>選擇數量：</span>
+              <div class="flex items-center border border-stone-200 rounded overflow-hidden">
+                <button type="button" onclick="adjustCardQty('${safeKey}', -1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">-</button>
+                <input type="number" id="input-qty-${safeKey}" value="1" min="1" class="w-10 h-7 text-center text-xs font-medium focus:outline-none bg-white border-x border-stone-100" onchange="validateCardQty('${safeKey}')">
+                <button type="button" onclick="adjustCardQty('${safeKey}', 1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center mt-2 pt-2 border-t border-stone-50">
+            <span id="price-display-${safeKey}" class="font-bold text-stone-800">NT$ ${formatPrice(defaultVariant.price)}</span>
+            <button type="button" onclick="addSelectedVariantToCart('${safeKey}', ${idx})" class="btn-primary text-xs px-3 py-1.5 rounded transition">加入購物車</button>
+          </div>
+        </div>
+        `;
+      }).join('');
+    }
 
     // 輔助函式：調整卡片上的數量
     function adjustCardQty(safeKey, delta) {
@@ -534,11 +535,10 @@
     }
 
     // 當切換口味選單時，卡片上的金額即時改變
-    function updateCardPrice(groupKey) {
-      const group = groupedProducts.find(g => g.groupKey === groupKey);
+    function updateCardPrice(safeKey, idx) {
+      const group = groupedProducts[idx];
       if (!group) return;
 
-      const safeKey = groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
       const select = document.getElementById(`select-variant-${safeKey}`);
       const selectedVariant = group.variants[select ? select.value : 0];
 
@@ -549,16 +549,17 @@
     }
 
     // 將選中的口味商品加入購物車
-    function addSelectedVariantToCart(groupKey) {
-      const group = groupedProducts.find(g => g.groupKey === groupKey);
+    function addSelectedVariantToCart(safeKey, idx) {
+      const group = groupedProducts[idx];
       if (!group) return;
 
-      const safeKey = groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
       const select = document.getElementById(`select-variant-${safeKey}`);
       const qtyInput = document.getElementById(`input-qty-${safeKey}`);
 
       const selectedVariantIdx = select ? select.value : 0;
       const selectedVariant = group.variants[selectedVariantIdx];
+      
+      // 精準抓取輸入框內設定的數量
       const addQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
 
       const existing = cart.find(item => item.id === selectedVariant.id);
@@ -626,8 +627,6 @@
       const badge = document.getElementById("cart-badge");
 
       const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-
-      // 修正變數名稱：正確宣告 subtotalPrice
       const subtotalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
       // 計算組合優惠
@@ -644,41 +643,70 @@
         }
       }
 
-      // 2. 渲染購物車品項清單
+      // 2. 渲染購物車品項清單 (支援直接輸入數量與單品刪除按鈕)
       if (listContainer) {
         if (cart.length === 0) {
           listContainer.innerHTML = `<p class="text-stone-400 text-sm text-center py-8">購物車目前是空的</p>`;
         } else {
           listContainer.innerHTML = cart.map(item => `
-          <div class="flex justify-between items-center text-sm py-2 border-b border-stone-100">
-            <div>
-              <span class="font-medium text-stone-700 block">${item.itemName}</span>
-              <span class="text-xs text-stone-400">NT$ ${formatPrice(item.price)}</span>
+            <div class="flex justify-between items-center text-sm py-3 border-b border-stone-100">
+              <div class="flex-grow pr-2">
+                <div class="flex items-center space-x-2">
+                  <span class="font-medium text-stone-700">${item.itemName}</span>
+                  <!-- 垃圾桶刪除圖示 -->
+                  <button type="button" onclick="removeItemFromCart('${item.id}')" title="刪除此品項" class="text-stone-300 hover:text-red-500 transition focus:outline-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="text-xs text-stone-400 block mt-0.5">NT$ ${formatPrice(item.price)}</span>
+              </div>
+              
+              <div class="flex items-center space-x-1 border border-stone-200 rounded overflow-hidden bg-white">
+                <button type="button" onclick="changeQty('${item.id}', -1)" class="w-6 h-6 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">-</button>
+                <!-- 可直接輸入數字的 input -->
+                <input type="number" value="${item.qty}" min="1" onchange="updateCartQtyInput('${item.id}', this.value)" class="w-10 h-6 text-center text-xs font-medium focus:outline-none bg-white">
+                <button type="button" onclick="changeQty('${item.id}', 1)" class="w-6 h-6 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">+</button>
+              </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <button type="button" onclick="changeQty('${item.id}', -1)" class="w-6 h-6 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center text-stone-600 font-bold">-</button>
-              <span class="w-4 text-center">${item.qty}</span>
-              <button type="button" onclick="changeQty('${item.id}', 1)" class="w-6 h-6 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center text-stone-600 font-bold">+</button>
-            </div>
-          </div>
           `).join('');
         }
       }
 
       // 3. 更新小計與應付總金額
       if (subtotalContainer) subtotalContainer.innerText = `NT$ ${formatPrice(subtotalPrice)}`;
-  
+      
       if (discountRow && discountAmountContainer && discountTitle) {
         if (discountResult.totalDiscount > 0) {
           discountRow.classList.remove("hidden");
           discountAmountContainer.innerText = `- NT$ ${formatPrice(discountResult.totalDiscount)}`;
           discountTitle.innerText = discountResult.summaryText;
         } else {
-          discountRow.classList.add("hidden")
+          discountRow.classList.add("hidden");
         }
       }
 
-      if (totalContainer) totalContainer.innerText = `NT$ ${formatPrice(finalTotalPrice)}`
+      if (totalContainer) totalContainer.innerText = `NT$ ${formatPrice(finalTotalPrice)}`;
+    }
+
+    // 購物車內直接修改數字輸入框
+    function updateCartQtyInput(productId, value) {
+      let newQty = parseInt(value);
+      if (isNaN(newQty) || newQty < 1) {
+        newQty = 1;
+      }
+      const item = cart.find(i => i.id === productId);
+      if (item) {
+        item.qty = newQty;
+        saveCartAndUI();
+      }
+    }
+
+    // 單獨整批刪除特定品項
+    function removeItemFromCart(productId) {
+      cart = cart.filter(i => i.id !== productId);
+      saveCartAndUI();
     }
 
     function changeQty(productId, delta) {
