@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>光顧好店．復出行動 | 2026宜花DOC團購活動</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans TC', sans-serif; background-color: #FBF9F6; color: #2C2C2C; }
+    .btn-primary { background-color: #3A5340; color: #FFFFFF; }
+    .btn-primary:hover { background-color: #2E4233; }
+    .btn-accent { background-color: #EE816f; color: #FFFFFF; }
+    .btn-accent:hover { background-color: #B25A37; }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- 頂部導覽列 -->
+  <header class="sticky top-0 z-50 bg-[#FBF9F6]/90 backdrop-blur-md border-b border-stone-200">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold tracking-wide text-stone-800">光顧好店．復出行動</h1>
+      
+      <button type="button" id="cart-button" onclick="toggleCart()" class="relative p-2 text-stone-700 hover:text-stone-900 transition focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#C86B45] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主視覺橫幅區塊 -->
+  <div class="w-full mb-8 rounded-lg overflow-hidden shadow-sm">
+    <img 
+      src="./image/網站橫幅.png" 
+      alt="光顧好店．復出行動" 
+      class="w-full h-auto max-h-[360px] object-cover block"
+    >
+  </div>
+
+  <!-- 主要內容區 -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+    <!--<section class="text-center py-8 mb-6">
+      <h2 class="text-3xl font-light text-stone-800 mb-2">來自產地的質感好物</h2>
+      <p class="text-stone-500 font-light text-sm">嚴選在地良品，品味來自土地的真實風味</p>
+    </section>-->
+
+    <!-- 分類過濾選單 -->
+    <nav class="flex flex-wrap justify-center gap-2 mb-10" id="category-buttons">
+    </nav>
+
+    <!-- 載入中狀態 -->
+    <div id="loading-state" class="flex flex-col items-center justify-center py-20 space-y-4">
+      <div class="w-8 h-8 border-2 border-stone-300 border-t-stone-700 rounded-full animate-spin"></div>
+      <p class="text-stone-500 text-sm tracking-wider animate-pulse">光顧好店 正在為您準備產地好物...</p>
+    </div>
+
+    <!-- 商品列表展示區 -->
+    <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden">
+    </div>
+  </main>
+
+  <!-- 購物車黑色遮罩 -->
+  <div id="cart-backdrop" onclick="toggleCart()" class="fixed inset-0 bg-black/40 z-50 hidden transition-opacity duration-300"></div>
+
+  <!-- 右側滑出式購物車抽屜 -->
+  <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-[#FBF9F6] shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col justify-between p-6 overflow-y-auto">
+    <div class="flex justify-between items-center pb-4 mb-4 border-b border-stone-200">
+      <div class="flex items-center space-x-3">
+        <h3 class="text-xl font-medium text-stone-800">您的選購清單</h3>
+        <button type="button" onclick="clearCart()" class="text-xs text-stone-400 hover:text-red-600 underline transition focus:outline-none">
+          清空購物車
+        </button>
+      </div>
+      <button type="button" onclick="toggleCart()" class="text-stone-400 hover:text-stone-800 text-2xl font-light focus:outline-none">&times;</button>
+    </div>
+
+      <div id="cart-items-list" class="space-y-4 mb-6">
+        <p class="text-stone-400 text-sm text-center py-8">購物車目前是空的</p>
+      </div>
+    </div>
+
+    <!-- 顧客資料表單 (精簡6項) -->
+    <div class="border-t border-stone-200 pt-4 mb-4 space-y-1">
+      <div class="flex justify-between items-center text-xs text-stone-500">
+        <span>商品小計</span>
+        <span id="cart-subtotal-price">NT$ 0</span>
+      </div>
+      
+      <div id="discount-row" class="flex justify-between items-center text-xs text-[#C86B45] hidden">
+        <span id="discount-title">組合優惠折抵</span>
+        <span id="cart-discount-amount">- NT$ 0</span>
+      </div>
+
+      <div class="flex justify-between items-center font-bold text-lg text-stone-800 pt-2 border-t border-stone-100">
+        <span>應付總金額</span>
+        <span id="cart-total-price">NT$ 0</span>
+      </div>
+    </div>
+
+      <form id="order-form" onsubmit="handleOrderSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-stone-600 mb-1">1. 訂購人姓名 *</label>
+          <input type="text" id="cust-name" required placeholder="請輸入姓名" class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white focus:outline-none focus:border-stone-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-stone-600 mb-1">2. 訂購人電話 *</label>
+          <input type="tel" id="cust-phone" required placeholder="0912345678" class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white focus:outline-none focus:border-stone-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-stone-600 mb-1">3. 訂購人信箱 *</label>
+          <input type="email" id="cust-email" required placeholder="example@email.com" class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white focus:outline-none focus:border-stone-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-stone-600 mb-1">4. 取貨方式 *</label>
+          <select id="cust-shipping" required onchange="handleShippingChange()" class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white focus:outline-none focus:border-stone-500">
+            <option value="花蓮市中華國小自取">花蓮市中華國小自取</option>
+            <option value="7-11店到店">7-11店到店</option>
+          </select>
+        </div>
+
+        <div id="store-name-container" class="hidden">
+          <label class="block text-xs font-medium text-stone-600 mb-1">5. 7-11 門市名稱 *</label>
+          <input type="text" id="cust-store-name" placeholder="請輸入7-11門市名稱（如：美崙門市）" class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white focus:outline-none focus:border-stone-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-stone-600 mb-1">6. 備註</label>
+          <textarea id="cust-note" rows="2" placeholder="是否有其他特殊需求或備註" class="w-full px-3 py-2 border border-stone-200 rounded text-sm bg-white focus:outline-none focus:border-stone-500"></textarea>
+        </div>
+        
+        <button type="submit" id="submit-btn" class="w-full py-3 btn-accent font-medium rounded transition duration-200 mt-2">確認並送出訂單</button>
+      </form>
+    </div>
+  </aside>
+
+  <section class="bg-stone-100 rounded-lg p-8 my-12">
+    <div class="max-w-3xl mx-auto text-center space-y-4">
+      <span class="text-xs font-medium tracking-widest text-[#C86B45] uppercase">About Us</span>
+      <h3 class="text-xl font-medium text-stone-800">關於「光顧好店．復出行動」</h3>
+      <p class="text-xs text-stone-600 leading-relaxed">
+        2025年，馬太鞍堰塞湖的洪災讓花蓮中區被按下了暫停鍵。從光復到鄰近的鳳林、萬榮與瑞穗，許多在地店家歷經了家園重整與漫長的清理，再次推開大門迎客，而我們也思考著如何幫助在地產業。因此，宜花DOC辦理團購活動，集結花蓮在地優質店家，邀請您，一同成為那束穿透雲霧的光。
+        </p>
+      </p>
+    </div>
+  </section>
+
+  <footer class="bg-stone-800 text-stone-300 py-10 border-t border-stone-700 mt-16 text-xs">
+    <div class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- 專案簡介 -->
+      <div>
+        <h4 class="text-sm font-medium text-white mb-3">光顧好店．付出行動</h4>
+        <p class="text-stone-400 leading-relaxed">嚴選在地良品，品味來自土地的真實風味。支持在地小農與文化創新推廣計畫。</p>
+      </div>
+
+      <!-- 主辦單位與線上平台連結 -->
+      <div>
+        <h4 class="text-sm font-medium text-white mb-3">主辦單位</h4>
+        <p class="text-stone-400 mb-3">宜蘭縣、花蓮縣數位機會中心</p>
+        
+        <!-- 官網與 Facebook 連結按鈕 -->
+        <div class="flex flex-col gap-2 pt-1">
+          <a href="https://itaiwan.moe.gov.tw/sup/index.php?team=7" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-stone-300 hover:text-white transition group">
+            <svg class="w-4 h-4 text-[#C86B45] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+            </svg>
+            <span class="underline underline-offset-2">官方網站</span>
+          </a>
+          <a href="https://www.facebook.com/hldoc" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 text-stone-300 hover:text-white transition group">
+            <svg class="w-4 h-4 text-[#1877F2] group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            <span class="underline underline-offset-2">Facebook粉絲專頁</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 聯絡我們 -->
+      <div>
+        <h4 class="text-sm font-medium text-white mb-3">聯絡我們</h4>
+        <p class="text-stone-400">服務時間：週一至週五 08:30 - 17:30</p>
+        <p class="text-stone-400 mt-1">聯絡電話：03-863-0121</p>
+        <p class="text-stone-400 mt-1">電子信箱：yhdocteam@yhdoc.org</p>
+      </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 pt-8 mt-8 border-t border-stone-700 text-center text-stone-500 text-[11px]">
+      © 2026 宜蘭縣、花蓮縣數位機會中心
+    </div>
+  </footer>
+
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzsHxyYcy8VU3r_892qnVp_i1yKSdK2y6MqIByqbDUtCvmdfhRFngwu5n6ZPclM4HSJ/exec";
+
+    let rawProducts = [];
+    let groupedProducts = [];
+    let cart = [];
+    let currentCategory = 'ALL';
+    let discountsRules = [];
+
+    function formatPrice(num) {
+      return Number(num || 0).toLocaleString('zh-TW');
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadCartFromStorage();
+      updateCartUI();
+      fetchProducts();
+    });
+    
+    // 清空購物車邏輯 (含防呆確認)
+    function clearCart() {
+      if (cart.length === 0) return;
+      if (confirm("確定要清空購物車內的所有商品嗎？")) {
+        cart = [];
+        localStorage.removeItem("guanggu_cart"); // 同步清除在地儲存
+        updateCartUI(); // 更新購物車介面與 Badge 數字
+      }
+    }
+
+    function loadCartFromStorage() {
+      const savedCart = localStorage.getItem("guanggu_cart");
+      if (savedCart) {
+        try { cart = JSON.parse(savedCart); } catch (e) { cart = []; }
+      }
+    }
+
+    function saveCartAndUI() {
+      localStorage.setItem("guanggu_cart", JSON.stringify(cart));
+      updateCartUI();
+    }
+
+    async function fetchProducts() {
+      try {
+        const response = await fetch(GAS_API_URL, { redirect: "follow" });
+        const data = await response.json(); // 宣告並取得 json 資料
+    
+        // 修正：正確解析 data 內容
+        if (Array.isArray(data)) {
+          rawProducts = data;
+          discountsRules = [];
+        } else if (data && typeof data === 'object') {      
+          rawProducts = data.products || [];
+          discountsRules = data.discounts || [];
+        } else {
+          rawProducts = [];
+          discountsRules = [];
+        }
+    
+        processGroupedProducts();
+
+        document.getElementById("loading-state").classList.add("hidden");
+        document.getElementById("product-grid").classList.remove("hidden");
+    
+        renderCategories();
+        renderProducts(groupedProducts);
+        updateCartUI(); // 確保資料載入完成後連動金額計算
+      } catch (error) {
+        console.error("載入失敗詳情：", error);
+        document.getElementById("loading-state").innerHTML = `
+        <p class="text-red-500 text-sm">商品資料載入失敗，請稍後重新整理頁面。</p>
+        `;
+      }
+    }
+
+    // 通用動態組合優惠計算 (完全讀取試算表 discounts 分頁設定)
+    function calculateDiscounts() {
+      let totalDiscount = 0;
+      let discountDetails = [];
+
+      if (!discountsRules || discountsRules.length === 0) {
+        return { totalDiscount: 0, summaryText: "" };
+      }
+
+      discountsRules.forEach(rule => {
+        const targetIds = rule.targetItems || [];
+        const minQty = rule.minQty || 0;
+        const ruleValue = rule.discountValue || 0;
+        const description = rule.description || "團購優惠";
+
+        if (targetIds.length === 0 || minQty <= 0) return;
+
+        // 找出購物車中屬於該優惠規則目標 (targetItems) 的商品
+        const matchedCartItems = cart.filter(item => targetIds.includes(item.id));
+        const totalQty = matchedCartItems.reduce((sum, item) => sum + item.qty, 0);
+
+        // 滿額達標計算
+        if (totalQty >= minQty) {
+          const freeCount = Math.floor(totalQty / minQty); // 可享優惠組數
+
+          let currentRuleDiscount = 0;
+
+          if (ruleValue > 0) {
+            // 定額折抵 (如買 2 送 1 折 250 元)
+            currentRuleDiscount = freeCount * ruleValue;
+          } else {
+            // 折抵最低價 (discountValue 為 0 時，自動將符合條件的單品按單價升冪排序，折抵最低價者)
+            let priceList = [];
+            matchedCartItems.forEach(item => {
+              for (let k = 0; k < item.qty; k++) {
+                priceList.push(item.price);
+              }
+            });
+            priceList.sort((a, b) => a - b); // 由低到高排序
+
+            for (let m = 0; m < freeCount; m++) {
+              currentRuleDiscount += priceList[m];
+            }
+          }
+
+          totalDiscount += currentRuleDiscount;
+          discountDetails.push(`${description} (-NT$ ${formatPrice(currentRuleDiscount)})`);
+        }
+      });
+
+      return {
+        totalDiscount: totalDiscount,
+        summaryText: discountDetails.join("、")
+      };
+    }
+
+    // 將資料庫中的多口味商品自動合併為單一卡片
+    function processGroupedProducts() {
+      const map = new Map();
+
+      rawProducts.forEach(item => {
+        const baseName = item.itemName.replace(/\s*\([^)]*\)/, '').trim();
+        const groupKey = `${item.brandName}_${baseName}`;
+
+        if (!map.has(groupKey)) {
+          map.set(groupKey, {
+            groupKey: groupKey,
+            brandName: item.brandName,
+            baseName: baseName,
+            category: item.category,
+            itemNote: item.itemNote,
+            imageUrl: item.imageUrl,
+            discountNames: new Set(), // 儲存專屬優惠標籤名稱
+            variants: []
+          });
+        }
+
+        const group = map.get(groupKey);
+
+        // 比對 discountsRules，找出此商品項對應的優惠名稱
+        if (discountsRules && discountsRules.length > 0) {
+          discountsRules.forEach(rule => {
+            if (rule.targetItems && rule.targetItems.includes(item.id)) {
+              if (rule.description) group.discountNames.add(rule.description);
+            }
+          });
+        }
+
+        if (item.category && !group.category.includes(item.category)) {
+          group.category += `, ${item.category}`;
+        }
+        
+        const flavorMatch = item.itemName.match(/\(([^)]+)\)/);
+        const flavorName = flavorMatch ? flavorMatch[1] : (group.variants.length > 0 ? `規格 ${group.variants.length + 1}` : '預設');
+
+        group.variants.push({
+          id: item.id,
+          fullName: item.itemName,
+          flavor: flavorName,
+          price: item.price
+        });
+      });
+
+      groupedProducts = Array.from(map.values()).map(g => ({
+        ...g,
+        discountBadgeText: Array.from(g.discountNames).join(" / ") // 轉為顯示用字串
+      }));
+    }
+
+    // 渲染分類按鈕（中秋限定置頂 + 專屬顏色高亮）
+    function renderCategories() {
+      const allCategorySet = new Set();
+      groupedProducts.forEach(g => {
+        if (g.category) {
+          const categories = String(g.category).split(/[,，]/).map(c => c.trim());
+          categories.forEach(c => { if (c) allCategorySet.add(c); });
+        }
+      });
+
+      const hasMidAutumn = allCategorySet.has("中秋限定");
+      if (hasMidAutumn) allCategorySet.delete("中秋限定");
+
+      const finalCategories = ['ALL'];
+      if (hasMidAutumn) finalCategories.push('中秋限定');
+      finalCategories.push(...Array.from(allCategorySet));
+
+      const navContainer = document.getElementById("category-buttons");
+      
+      navContainer.innerHTML = finalCategories.map(cat => {
+        const isSelected = (currentCategory === cat);
+        const isSpecial = (cat === '中秋限定');
+
+        let btnStyle = "px-4 py-1.5 rounded-full text-sm font-medium transition duration-200 border ";
+
+        if (isSpecial) {
+          if (isSelected) {
+            btnStyle += "bg-[#2FB5A4] text-white border-[#2FB5A4] shadow-sm";
+          } else {
+            btnStyle += "bg-[#FFFFFF]/10 text-[#2FB5A4] border-stone-200 hover:border-[#2FB5A4] hover:text-[#2FB5A4]";
+          }
+        } else {
+          if (isSelected) {
+            btnStyle += "bg-stone-800 text-white border-stone-800 shadow-sm";
+          } else {
+            btnStyle += "bg-white text-stone-600 border-stone-200 hover:border-stone-800 hover:text-stone-800";
+          }
+        }
+
+        const labelText = (cat === 'ALL') ? '全部商品' : cat;
+
+        return `
+          <button type="button" onclick="filterCategory('${cat}')" class="${btnStyle}">
+            ${isSpecial ? '🥮' : ''}${labelText}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      renderCategories();
+
+      if (cat === 'ALL') {
+        renderProducts(groupedProducts);
+      } else {
+        const filtered = groupedProducts.filter(g => {
+          if (!g.category) return false;
+          const categories = String(g.category).split(/[,，]/).map(c => c.trim());
+          return categories.includes(cat);
+        });
+        renderProducts(filtered);
+      }
+    }
+
+    // 渲染商品卡片 (含口味選單)
+    function renderProducts(groups) {
+      const grid = document.getElementById("product-grid");
+      grid.innerHTML = groups.map(group => {
+        const hasVariants = group.variants.length > 1;
+        const defaultVariant = group.variants[0];
+        const safeKey = group.groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+        return `
+          <div class="bg-white rounded-lg border border-stone-100 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between p-4">
+            <div>
+              <div class="w-full h-48 bg-stone-100 rounded-md mb-3 flex items-center justify-center text-stone-300 text-xs overflow-hidden relative">
+                ${group.imageUrl ? `<img src="${group.imageUrl}" class="w-full h-full object-cover">` : '光顧好店'}
+                
+                <!-- 右上角動態標籤區 -->
+                <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
+                  ${group.category.includes("中秋限定") ? `<span class="bg-[#2FB5A4] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🥮中秋限定優惠</span>` : ''}
+                  ${group.discountBadgeText ? `<span class="bg-[#F1816E] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🏷️${group.discountBadgeText}</span>` : ''}
+                </div>
+              </div>
+              
+              <span class="text-xs text-stone-400 font-light">${group.brandName || '在地嚴選'}</span>
+              <h4 class="font-medium text-stone-800 mb-1">${group.baseName}</h4>
+              <p class="text-xs text-stone-500 mb-3">${group.itemNote || ''}</p>
+              
+              <!-- 多口味下拉選單 -->
+              ${hasVariants ? `
+                <div class="mb-3">
+                  <label class="block text-[11px] text-stone-400 mb-1">選擇口味/規格：</label>
+                  <select id="select-variant-${safeKey}" onchange="updateCardPrice('${group.groupKey}')" class="w-full px-2 py-1.5 border border-stone-200 rounded text-xs bg-stone-50 text-stone-700 focus:outline-none focus:border-stone-500">
+                    ${group.variants.map((v, vIdx) => `<option value="${vIdx}">${v.flavor}</option>`).join('')}
+                  </select>
+                </div>
+              ` : ''}
+
+              <!-- 卡片上的數量選擇器 -->
+              <div class="mb-2 flex items-center justify-between text-xs text-stone-500">
+                <span>選擇數量：</span>
+                <div class="flex items-center border border-stone-200 rounded overflow-hidden">
+                  <button type="button" onclick="adjustCardQty('${safeKey}', -1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">-</button>
+                  <input type="number" id="input-qty-${safeKey}" value="1" min="1" class="w-10 h-7 text-center text-xs font-medium focus:outline-none bg-white border-x border-stone-100" onchange="validateCardQty('${safeKey}')">
+                  <button type="button" onclick="adjustCardQty('${safeKey}', 1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-2 pt-2 border-t border-stone-50">
+              <span id="price-display-${safeKey}" class="font-bold text-stone-800">NT$ ${formatPrice(defaultVariant.price)}</span>
+              <button type="button" onclick="addSelectedVariantToCart('${group.groupKey}')" class="btn-primary text-xs px-3 py-1.5 rounded transition">加入購物車</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 輔助函式：調整卡片上的數量
+    function adjustCardQty(safeKey, delta) {
+      const qtyInput = document.getElementById(`input-qty-${safeKey}`);
+      if (!qtyInput) return;
+      let currentVal = parseInt(qtyInput.value) || 1;
+      currentVal += delta;
+      if (currentVal < 1) currentVal = 1;
+      qtyInput.value = currentVal;
+    }
+
+    // 輔助函式：防止手動輸入小於 1 的數字
+    function validateCardQty(safeKey) {
+      const qtyInput = document.getElementById(`input-qty-${safeKey}`);
+      if (!qtyInput) return;
+      let currentVal = parseInt(qtyInput.value);
+      if (isNaN(currentVal) || currentVal < 1) {
+        qtyInput.value = 1;
+      }
+    }
+
+    // 輔助函式：調整卡片上的數量
+    function adjustCardQty(safeKey, delta) {
+      const qtyInput = document.getElementById(`input-qty-${safeKey}`);
+      if (!qtyInput) return;
+      let currentVal = parseInt(qtyInput.value) || 1;
+      currentVal += delta;
+      if (currentVal < 1) currentVal = 1;
+      qtyInput.value = currentVal;
+    }
+
+    // 輔助函式：防止手動輸入小於 1 的數字
+    function validateCardQty(safeKey) {
+      const qtyInput = document.getElementById(`input-qty-${safeKey}`);
+      if (!qtyInput) return;
+      let currentVal = parseInt(qtyInput.value);
+      if (isNaN(currentVal) || currentVal < 1) {
+        qtyInput.value = 1;
+      }
+    }
+
+    // 當切換口味選單時，卡片上的金額即時改變
+    function updateCardPrice(groupKey) {
+      const group = groupedProducts.find(g => g.groupKey === groupKey);
+      if (!group) return;
+
+      const safeKey = groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const select = document.getElementById(`select-variant-${safeKey}`);
+      const selectedVariant = group.variants[select ? select.value : 0];
+
+      const priceElem = document.getElementById(`price-display-${safeKey}`);
+      if (priceElem && selectedVariant) {
+        priceElem.innerText = `NT$ ${formatPrice(selectedVariant.price)}`;
+      }
+    }
+
+    // 將選中的口味商品加入購物車
+    function addSelectedVariantToCart(groupKey) {
+      const group = groupedProducts.find(g => g.groupKey === groupKey);
+      if (!group) return;
+
+      const safeKey = groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const select = document.getElementById(`select-variant-${safeKey}`);
+      const qtyInput = document.getElementById(`input-qty-${safeKey}`);
+
+      const selectedVariantIdx = select ? select.value : 0;
+      const selectedVariant = group.variants[selectedVariantIdx];
+      const addQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+
+      const existing = cart.find(item => item.id === selectedVariant.id);
+      
+      if (existing) {
+        existing.qty += addQty;
+      } else {
+        cart.push({
+          id: selectedVariant.id,
+          itemName: selectedVariant.fullName,
+          price: selectedVariant.price,
+          qty: addQty
+        });
+      }
+      
+      // 加入購物車後，重置該卡片的選購數量輸入框為 1
+      if (qtyInput) qtyInput.value = 1;
+
+      saveCartAndUI();
+      animateCartIcon();
+    }
+
+    function animateCartIcon() {
+      const btn = document.getElementById("cart-button");
+      btn.classList.add("animate-bounce");
+      setTimeout(() => { btn.classList.remove("animate-bounce"); }, 800);
+    }
+
+    function toggleCart() {
+      const drawer = document.getElementById("cart-drawer");
+      const backdrop = document.getElementById("cart-backdrop");
+      const isOpen = !drawer.classList.contains("translate-x-full");
+
+      if (isOpen) {
+        drawer.classList.add("translate-x-full");
+        backdrop.classList.add("hidden");
+      } else {
+        drawer.classList.remove("translate-x-full");
+        backdrop.classList.remove("hidden");
+      }
+    }
+
+    function handleShippingChange() {
+      const shippingVal = document.getElementById("cust-shipping").value;
+      const storeContainer = document.getElementById("store-name-container");
+      const storeInput = document.getElementById("cust-store-name");
+
+      if (shippingVal === "7-11店到店") {
+        storeContainer.classList.remove("hidden");
+        storeInput.required = true;
+      } else {
+        storeContainer.classList.add("hidden");
+        storeInput.required = false;
+        storeInput.value = "";
+      }
+    }
+
+    function updateCartUI() {
+      const listContainer = document.getElementById("cart-items-list");
+      const subtotalContainer = document.getElementById("cart-subtotal-price");
+      const totalContainer = document.getElementById("cart-total-price");
+      const discountRow = document.getElementById("discount-row");
+      const discountAmountContainer = document.getElementById("cart-discount-amount");
+      const discountTitle = document.getElementById("discount-title");
+      const badge = document.getElementById("cart-badge");
+
+      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+
+      // 修正變數名稱：正確宣告 subtotalPrice
+      const subtotalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+      // 計算組合優惠
+      const discountResult = calculateDiscounts();
+      const finalTotalPrice = Math.max(0, subtotalPrice - discountResult.totalDiscount);
+
+      // 1. 更新購物車紅點 Badge
+      if (badge) {
+        if (totalItems > 0) {
+          badge.innerText = totalItems;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+
+      // 2. 渲染購物車品項清單
+      if (listContainer) {
+        if (cart.length === 0) {
+          listContainer.innerHTML = `<p class="text-stone-400 text-sm text-center py-8">購物車目前是空的</p>`;
+        } else {
+          listContainer.innerHTML = cart.map(item => `
+          <div class="flex justify-between items-center text-sm py-2 border-b border-stone-100">
+            <div>
+              <span class="font-medium text-stone-700 block">${item.itemName}</span>
+              <span class="text-xs text-stone-400">NT$ ${formatPrice(item.price)}</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="changeQty('${item.id}', -1)" class="w-6 h-6 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center text-stone-600 font-bold">-</button>
+              <span class="w-4 text-center">${item.qty}</span>
+              <button type="button" onclick="changeQty('${item.id}', 1)" class="w-6 h-6 bg-stone-100 hover:bg-stone-200 rounded flex items-center justify-center text-stone-600 font-bold">+</button>
+            </div>
+          </div>
+          `).join('');
+        }
+      }
+
+      // 3. 更新小計與應付總金額
+      if (subtotalContainer) subtotalContainer.innerText = `NT$ ${formatPrice(subtotalPrice)}`;
+  
+      if (discountRow && discountAmountContainer && discountTitle) {
+        if (discountResult.totalDiscount > 0) {
+          discountRow.classList.remove("hidden");
+          discountAmountContainer.innerText = `- NT$ ${formatPrice(discountResult.totalDiscount)}`;
+          discountTitle.innerText = discountResult.summaryText;
+        } else {
+          discountRow.classList.add("hidden")
+        }
+      }
+
+      if (totalContainer) totalContainer.innerText = `NT$ ${formatPrice(finalTotalPrice)}`
+    }
+
+    function changeQty(productId, delta) {
+      const item = cart.find(i => i.id === productId);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) {
+        cart = cart.filter(i => i.id !== productId);
+      }
+      saveCartAndUI();
+    }
+
+    async function handleOrderSubmit(event) {
+      event.preventDefault();
+      if (cart.length === 0) {
+        alert("請先挑選商品加入購物車！");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submit-btn");
+      submitBtn.disabled = true;
+      submitBtn.innerText = "訂單處理中...";
+
+      const shippingMethod = document.getElementById("cust-shipping").value;
+      const storeName = document.getElementById("cust-store-name").value;
+
+      let addressDetail = "花蓮市中華國小自取";
+      if (shippingMethod === "7-11店到店") {
+        addressDetail = "7-11 門市：" + storeName;
+      }
+
+      const orderPayload = {
+        customerName: document.getElementById("cust-name").value,
+        phone: document.getElementById("cust-phone").value,
+        email: document.getElementById("cust-email").value,
+        shippingMethod: shippingMethod,
+        address: addressDetail,
+        note: document.getElementById("cust-note").value,
+        items: cart,
+        totalAmount: cart.reduce((sum, item) => sum + (item.price * item.qty), 0)
+      };
+
+      try {
+        await fetch(GAS_API_URL, {
+          method: "POST",
+          body: JSON.stringify(orderPayload)
+        });
+        alert("感謝您的訂購！訂單已成功送出。\n請至電子信箱確認訂單內容，後續將有專人與您聯繫。");
+        
+        cart = [];
+        localStorage.removeItem("guanggu_cart");
+        updateCartUI();
+        toggleCart(); 
+        document.getElementById("order-form").reset();
+        handleShippingChange();
+      } catch (error) {
+        alert("訂單送出失敗，請重試或聯繫客服。");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "確認並送出訂單";
+      }
+    }
+  </script>
+</body>
+</html>
