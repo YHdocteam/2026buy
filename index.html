@@ -199,6 +199,7 @@
 
     let rawProducts = [];
     let groupedProducts = [];
+    let displayedProducts = [];
     let cart = [];
     let currentCategory = 'ALL';
     let discountsRules = [];
@@ -431,15 +432,15 @@
       renderCategories();
 
       if (cat === 'ALL') {
-        renderProducts(groupedProducts);
+        displayedProducts = [...groupedProducts]; // 全選
       } else {
-        const filtered = groupedProducts.filter(g => {
+        displayedProducts = groupedProducts.filter(g => {
           if (!g.category) return false;
           const categories = String(g.category).split(/[,，]/).map(c => c.trim());
           return categories.includes(cat);
         });
-        renderProducts(filtered);
       }
+      renderProducts(displayedProducts);
     }
 
     // 渲染商品卡片 (含口味選單)
@@ -536,7 +537,8 @@
 
     // 當切換口味選單時，卡片上的金額即時改變
     function updateCardPrice(safeKey, idx) {
-      const group = groupedProducts[idx];
+      // ⭕ 改為從目前顯示的清單抓取商品
+      const group = displayedProducts[idx];
       if (!group) return;
 
       const select = document.getElementById(`select-variant-${safeKey}`);
@@ -550,7 +552,8 @@
 
     // 將選中的口味商品加入購物車
     function addSelectedVariantToCart(safeKey, idx) {
-      const group = groupedProducts[idx];
+      // ⭕ 改為從目前顯示的清單抓取商品
+      const group = displayedProducts[idx];
       if (!group) return;
 
       const select = document.getElementById(`select-variant-${safeKey}`);
@@ -559,7 +562,6 @@
       const selectedVariantIdx = select ? select.value : 0;
       const selectedVariant = group.variants[selectedVariantIdx];
       
-      // 精準抓取輸入框內設定的數量
       const addQty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
 
       const existing = cart.find(item => item.id === selectedVariant.id);
@@ -575,7 +577,6 @@
         });
       }
       
-      // 加入購物車後，重置該卡片的選購數量輸入框為 1
       if (qtyInput) qtyInput.value = 1;
 
       saveCartAndUI();
