@@ -696,56 +696,68 @@
       if (cart.length === 0) {
         alert("請先挑選商品加入購物車！");
         return;
+         }
+
+        const submitBtn = document.getElementById("submit-btn");
+        submitBtn.disabled = true;
+        submitBtn.innerText = "訂單處理中...";
+
+        const shippingMethod = document.getElementById("cust-shipping").value;
+        const storeName = document.getElementById("cust-store-name").value;
+
+        let addressDetail = "花蓮市中華國小自取";    
+        if (shippingMethod === "7-11店到店") {
+          addressDetail = "7-11 門市：" + storeName;
+        }
+
+        // 1. 先計算商品原價小計
+        const subtotalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+        // 2. 計算組合優惠折扣金額與說明
+        const discountResult = calculateDiscounts();
+        const discountAmount = discountResult.totalDiscount || 0;
+
+        // 3. 算出真正折抵後的應付總金額
+        const finalTotalAmount = Math.max(0, subtotalPrice - discountAmount);
+
+        const orderPayload = {
+          customerName: document.getElementById("cust-name").value,
+          phone: document.getElementById("cust-phone").value,
+          email: document.getElementById("cust-email").value,
+          shippingMethod: shippingMethod,
+          address: addressDetail,
+          note: document.getElementById("cust-note").value,
+          items: cart,
+          subtotalAmount: subtotalPrice,                  // 原價小計
+          discountAmount: discountAmount,                  // 折扣金額
+          discountSummary: discountResult.summaryText || "", // 折扣說明
+          totalAmount: finalTotalAmount                    // 👈 正確送出折抵後的總金額！
+        };
+
+        try {
+          await fetch(GAS_API_URL, {
+            method: "POST",
+            mode: "cors",
+            headers: {
+              "Content-Type": "text/plain;charset=utf-8" // ⚠️ 必須設定為 text/plain 避開 CORS 阻擋
+            },
+            body: JSON.stringify(orderPayload)
+          });
+
+          alert("感謝您的訂購！訂單已成功送出。\n請至電子信箱確認訂單內容，後續將有專人與您聯繫。");
+          cart = [];
+          localStorage.removeItem("guanggu_cart");        
+          updateCartUI();
+          toggleCart(); 
+          document.getElementById("order-form").reset();
+          handleShippingChange();
+        } catch (error) {
+          alert("訂單送出失敗，請重試或聯繫客服。");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "確認並送出訂單";
+        }
       }
-
-      const submitBtn = document.getElementById("submit-btn");
-      submitBtn.disabled = true;
-      submitBtn.innerText = "訂單處理中...";
-
-      const shippingMethod = document.getElementById("cust-shipping").value;
-      const storeName = document.getElementById("cust-store-name").value;
-
-      let addressDetail = "花蓮市中華國小自取";
-      if (shippingMethod === "7-11店到店") {
-        addressDetail = "7-11 門市：" + storeName;
-      }
-
-      const orderPayload = {
-        customerName: document.getElementById("cust-name").value,
-        phone: document.getElementById("cust-phone").value,
-        email: document.getElementById("cust-email").value,
-        shippingMethod: shippingMethod,
-        address: addressDetail,
-        note: document.getElementById("cust-note").value,
-        items: cart,
-        totalAmount: cart.reduce((sum, item) => sum + (item.price * item.qty), 0)
-      };
-
-      try {
-        await fetch(GAS_API_URL, {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8" // ⚠️ 必須設定為 text/plain 避開 CORS 阻擋
-          },
-          body: JSON.stringify(orderPayload)
-        });
-
-        alert("感謝您的訂購！訂單已成功送出。\n請至電子信箱確認訂單內容，後續將有專人與您聯繫。");
-          
-        cart = [];
-        localStorage.removeItem("guanggu_cart");
-        updateCartUI();
-        toggleCart(); 
-        document.getElementById("order-form").reset();
-        handleShippingChange();
-      } catch (error) {
-        alert("訂單送出失敗，請重試或聯繫客服。");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = "確認並送出訂單";
-      }
-    }
   </script>
 </body>
 </html>
