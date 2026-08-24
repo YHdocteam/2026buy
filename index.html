@@ -728,10 +728,15 @@
       try {
         await fetch(GAS_API_URL, {
           method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8" // ⚠️ 必須設定為 text/plain 避開 CORS 阻擋
+          },
           body: JSON.stringify(orderPayload)
         });
+
         alert("感謝您的訂購！訂單已成功送出。\n請至電子信箱確認訂單內容，後續將有專人與您聯繫。");
-        
+          
         cart = [];
         localStorage.removeItem("guanggu_cart");
         updateCartUI();
