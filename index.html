@@ -444,58 +444,54 @@
 
     // 渲染商品卡片 (含口味選單)
     function renderProducts(groups) {
-      const grid = document.getElementById("product-grid");
-      grid.innerHTML = groups.map(group => {
-        const hasVariants = group.variants.length > 1;
-        const defaultVariant = group.variants[0];
-        const safeKey = group.groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const grid = document.getElementById("product-grid");
+        grid.innerHTML = groups.map(group => {
+          const hasVariants = group.variants.length > 1;
+          const defaultVariant = group.variants[0];
+          const safeKey = group.groupKey.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-        return `
-          <div class="bg-white rounded-lg border border-stone-100 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between p-4">
-            <div>
-              <div class="w-full h-48 bg-stone-100 rounded-md mb-3 flex items-center justify-center text-stone-300 text-xs overflow-hidden relative">
-                ${group.imageUrl ? `<img src="${group.imageUrl}" class="w-full h-full object-cover">` : '光顧好店'}
+          return `
+            <div class="bg-white rounded-lg border border-stone-100 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between p-4">
+              <div>
+                <div class="w-full h-48 bg-stone-100 rounded-md mb-3 flex items-center justify-center text-stone-300 text-xs overflow-hidden relative">
+                  ${group.imageUrl ? `<img src="${group.imageUrl}" class="w-full h-full object-cover">` : '光顧好店'}
+                  <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
+                    ${group.category.includes("中秋限定") ? `<span class="bg-[#2FB5A4] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🥮中秋限定優惠</span>` : ''}
+                    ${group.discountBadgeText ? `<span class="bg-[#F1816E] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🏷️${group.discountBadgeText}</span>` : ''}
+                  </div>
+                </div>
                 
-                <!-- 右上角動態標籤區 -->
-                <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
-                  ${group.category.includes("中秋限定") ? `<span class="bg-[#2FB5A4] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🥮中秋限定優惠</span>` : ''}
-                  ${group.discountBadgeText ? `<span class="bg-[#F1816E] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🏷️${group.discountBadgeText}</span>` : ''}
+                <span class="text-xs text-stone-400 font-light">${group.brandName || '在地嚴選'}</span>
+                <h4 class="font-medium text-stone-800 mb-1">${group.baseName}</h4>
+                <p class="text-xs text-stone-500 mb-3">${group.itemNote || ''}</p>
+                
+                ${hasVariants ? `
+                  <div class="mb-3">
+                    <label class="block text-[11px] text-stone-400 mb-1">選擇口味/規格：</label>
+                    <select id="select-variant-${safeKey}" onchange="updateCardPrice('${group.groupKey}')" class="w-full px-2 py-1.5 border border-stone-200 rounded text-xs bg-stone-50 text-stone-700 focus:outline-none focus:border-stone-500">
+                      ${group.variants.map((v, vIdx) => `<option value="${vIdx}">${v.flavor}</option>`).join('')}
+                    </select>
+                  </div>
+                ` : ''}
+
+                <div class="mb-2 flex items-center justify-between text-xs text-stone-500">
+                  <span>選擇數量：</span>
+                  <div class="flex items-center border border-stone-200 rounded overflow-hidden">
+                    <button type="button" onclick="adjustCardQty('${safeKey}', -1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">-</button>
+                    <input type="number" id="input-qty-${safeKey}" value="1" min="1" class="w-10 h-7 text-center text-xs font-medium focus:outline-none bg-white border-x border-stone-100" onchange="validateCardQty('${safeKey}')">
+                    <button type="button" onclick="adjustCardQty('${safeKey}', 1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">+</button>
+                  </div>
                 </div>
               </div>
-              
-              <span class="text-xs text-stone-400 font-light">${group.brandName || '在地嚴選'}</span>
-              <h4 class="font-medium text-stone-800 mb-1">${group.baseName}</h4>
-              <p class="text-xs text-stone-500 mb-3">${group.itemNote || ''}</p>
-              
-              <!-- 多口味下拉選單 -->
-              ${hasVariants ? `
-                <div class="mb-3">
-                  <label class="block text-[11px] text-stone-400 mb-1">選擇口味/規格：</label>
-                  <select id="select-variant-${safeKey}" onchange="updateCardPrice('${group.groupKey}')" class="w-full px-2 py-1.5 border border-stone-200 rounded text-xs bg-stone-50 text-stone-700 focus:outline-none focus:border-stone-500">
-                    ${group.variants.map((v, vIdx) => `<option value="${vIdx}">${v.flavor}</option>`).join('')}
-                  </select>
-                </div>
-              ` : ''}
 
-              <!-- 卡片上的數量選擇器 -->
-              <div class="mb-2 flex items-center justify-between text-xs text-stone-500">
-                <span>選擇數量：</span>
-                <div class="flex items-center border border-stone-200 rounded overflow-hidden">
-                  <button type="button" onclick="adjustCardQty('${safeKey}', -1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">-</button>
-                  <input type="number" id="input-qty-${safeKey}" value="1" min="1" class="w-10 h-7 text-center text-xs font-medium focus:outline-none bg-white border-x border-stone-100" onchange="validateCardQty('${safeKey}')">
-                  <button type="button" onclick="adjustCardQty('${safeKey}', 1)" class="w-7 h-7 bg-stone-50 hover:bg-stone-100 text-stone-600 font-bold flex items-center justify-center transition">+</button>
-                </div>
+              <div class="flex justify-between items-center mt-2 pt-2 border-t border-stone-50">
+                <span id="price-display-${safeKey}" class="font-bold text-stone-800">NT$ ${formatPrice(defaultVariant.price)}</span>
+                <button type="button" onclick="addSelectedVariantToCart('${group.groupKey}')" class="btn-primary text-xs px-3 py-1.5 rounded transition">加入購物車</button>
               </div>
             </div>
-
-            <div class="flex justify-between items-center mt-2 pt-2 border-t border-stone-50">
-              <span id="price-display-${safeKey}" class="font-bold text-stone-800">NT$ ${formatPrice(defaultVariant.price)}</span>
-              <button type="button" onclick="addSelectedVariantToCart('${group.groupKey}')" class="btn-primary text-xs px-3 py-1.5 rounded transition">加入購物車</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
+          `;
+        }).join('');
+      }
 
     // 輔助函式：調整卡片上的數量
     function adjustCardQty(safeKey, delta) {
