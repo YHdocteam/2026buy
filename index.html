@@ -459,7 +459,7 @@
         <div class="bg-white rounded-lg border border-stone-100 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between p-4">
           <div>
             <div class="w-full h-48 bg-stone-100 rounded-md mb-3 flex items-center justify-center text-stone-300 text-xs overflow-hidden relative">
-              ${group.imageUrl ? `<img src="${group.imageUrl}" class="w-full h-full object-cover">` : '光顧好店'}
+              <img src="${group.imageUrl || 'https://lh3.googleusercontent.com/d/14bbdxb9roWTFJKWlVPKBKevRxZJUwdMw'}" class="w-full h-full object-cover">
               <div class="absolute top-2 right-2 flex flex-col items-end gap-1">
                 ${group.category.includes("中秋限定") ? `<span class="bg-[#2FB5A4] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🥮中秋限定優惠</span>` : ''}
                 ${group.discountBadgeText ? `<span class="bg-[#F1816E] text-white text-[10px] px-2 py-0.5 rounded-full font-medium shadow-sm">🏷️${group.discountBadgeText}</span>` : ''}
